@@ -34,7 +34,7 @@ export const users = pgTable("user", {
 export const usersRelations = relations(users, ({ one, many }) => ({
   accounts: many(accounts),
   answers: many(answers, {
-    relationName: "answers",
+    relationName: "userAnswers",
   }),
   route: one(routes, {
     fields: [users.routeId],
@@ -133,6 +133,7 @@ export const roundsRelations = relations(rounds, ({ one, many }) => ({
   route: one(routes, {
     fields: [rounds.routeId],
     references: [routes.id],
+    relationName: "rounds",
   }),
 }));
 
@@ -155,9 +156,11 @@ export const answersRelations = relations(answers, ({ one }) => ({
   user: one(users, {
     fields: [answers.userId],
     references: [users.id],
+    relationName: "userAnswers"
   }),
   round: one(rounds, {
     fields: [answers.roundId],
     references: [rounds.id],
+    relationName: "answers"
   }),
 }));
