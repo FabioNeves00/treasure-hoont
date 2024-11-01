@@ -18,20 +18,7 @@ export default function Page() {
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const roundId = useSearchParams().get("roundId");
-
   useEffect(() => {
-    if (roundId) {
-      getClueById(roundId).then((data) => {
-        setClue({
-          hint: data.hint!,
-          id: data.id,
-          nextId: data.nextId
-        });
-        setLoading((prev) => false);
-        setSuccess((prev) => true);
-      });
-    } else {
       getClue().then((data) => {
         setClue({
           hint: data.hint!,
@@ -41,7 +28,6 @@ export default function Page() {
         setLoading((prev) => false);
         setSuccess((prev) => true);
       });
-    }
   }, []);
 
   const handleClick = async () => {
