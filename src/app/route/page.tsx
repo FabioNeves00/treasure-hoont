@@ -1,19 +1,45 @@
 'use client';
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { redirect } from "next/navigation";
-import { toast } from "../../components/ui/use-toast";
 import { getUserRoute } from "../../use-cases/user/get-route";
+import { titleCase } from "../../lib/title-case";
+import { getClue } from "../../use-cases/clue/get-clue";
 
-export default async function Page() {
+export default function Page() {
+  const [route, setRoute] = useState<{title: string, id: string}>({ title: "!@!%$!#&%!!", id: " "});
+  const [isTeacherClue, setIsTeacherClue] = useState<boolean>(false);
+  const [clue, setClue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const session = useSession();
-  const route = await getUserRoute();
+
+  useEffect(() => {
+    getUserRoute().then(data => {
+      if (data.error) {
+        setError(prev => true);
+        setLoading(prev => false)
+      } else if (data.id) {
+        setRoute(data);
+        setLoading(prev => false)
+        setSuccess(prev => true);
+      }
+    });
+
+    // getClue().then(data => {
+    //   if (data.error) {
+    //     setError(prev => true);
+    //     setLoading(prev => false)
+    //   } else if (data.id) {
+    //     setClue(data);
+    //     setLoading(prev => false)
+    //     setSuccess(prev => true);
+    //   }
+    // });
+  }, [])
 
   if (!session.data?.user) {
     redirect("/login");
@@ -34,10 +60,10 @@ export default async function Page() {
         {/* Welcome text content */}
         <div className="space-y-4 text-center mb-12">
           <h1 className="text-2xl md:text-3xl font-medium">
-            Bem vindo, <span className="font-bold">{firstName + " " + lastName} de AAAA</span>
+            Bem vindo, <span className="font-bold">{titleCase(firstName + " " + lastName)} de {route.title}</span>
           </h1>
           <div className="space-y-2 text-lg md:text-xl">
-            <p>AAAAA</p>
+            <p>{}</p>
             
           </div>
         </div>
