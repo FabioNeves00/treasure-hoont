@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { redirect, useSearchParams } from "next/navigation";
 import { getUserRoute } from "../../use-cases/user/get-route";
 import { getClue } from "../../use-cases/clue/get-clue";
-import { getClueById } from "../../use-cases/clue/get-clue-by-id";
 import { answer } from "../../use-cases/user/answer";
 import { toast } from "../../components/ui/use-toast";
 import { Check } from "lucide-react";
@@ -57,10 +56,10 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 transition-all duration-200">
+    <div className="min-h-screen flex items-center justify-center gap-12 p-4 bg-gray-50 transition-all duration-200">
       <div className="w-full max-w-2xl p-8 flex flex-col items-center">
         {/* Welcome text content */}
-        <div className="space-y-2 text-lg md:text-xl">
+        <div className="space-y-2 text-lg mb-10 md:text-xl">
           <p>{clue?.hint}</p>
         </div>
 

@@ -1,76 +1,101 @@
-import Link from 'next/link';
+'use client';
+import { Button } from "@/src/components/ui/button";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { assignRoute } from "../use-cases/user/assign-route";
+import { redirect } from "next/navigation";
+import { getUserRoute } from "../use-cases/user/get-route";
+import { toast } from "../components/ui/use-toast";
+import Link from "next/link";
+import { titleCase } from "../lib/title-case";
 
 export default function Page() {
+  const [route, setRoute] = useState<{title: string, id: string}>({ title: "!@!%$!#&%!!", id: " "});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const session = useSession();
+
+  useEffect(() => {
+    getUserRoute().then(data => {
+      if (data.error) {
+        setError(prev => true);
+        setLoading(prev => false)
+      } else if (data.id) {
+        setRoute(data);
+        setLoading(prev => false)
+        setSuccess(prev => true);
+      }
+    });
+  }, []);
+  if(!session.data?.user) {
+    redirect("/login");
+  };
+
+  const avatar = session.data!.user.image!;
+  const splittedName = session.data!.user.name!.split(" ");
+  const [firstName, lastName] = [splittedName[0], splittedName.at(-1)];
+
+  const handleClick = async () => {
+    setLoading(prev => true)
+    const { error, message, route } = await assignRoute();
+
+    if (error) {
+      setError(prev => true);
+      setLoading(prev => false)
+      toast({
+        variant: "destructive",
+        title: "Erro ao atribuir sua trilha",
+        description: "Houve um erro ao atribuir sua trilha. Por favor, tente novamente mais tarde ou encontre o responsável local.",
+      });
+    } else if (message){
+      setRoute(route);
+      setLoading(prev => false)
+      toast({
+        title: "Trilha atribuída com sucesso",
+        description: "Sua trilha foi atribuída com sucesso. Agora você pode começar a jogar!",
+      });
+      setSuccess(prev => true);
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-black">
-      <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <svg
-          width="283"
-          height="64"
-          viewBox="0 0 283 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-36 h-36"
-          aria-label="Vercel logo"
-        >
-          <path
-            d="M141.04 16c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.46 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM248.72 16c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.45 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zM200.24 34c0 6 3.92 10 10 10 4.12 0 7.21-1.87 8.8-4.92l7.68 4.43c-3.18 5.3-9.14 8.49-16.48 8.49-11.05 0-19-7.2-19-18s7.96-18 19-18c7.34 0 13.29 3.19 16.48 8.49l-7.68 4.43c-1.59-3.05-4.68-4.92-8.8-4.92-6.07 0-10 4-10 10zm82.48-29v46h-9V5h9zM36.95 0L73.9 64H0L36.95 0zm92.38 5l-27.71 48L73.91 5H84.3l17.32 30 17.32-30h10.39zm58.91 12v9.69c-1-.29-2.06-.49-3.2-.49-5.81 0-10 4-10 10V51h-9V17h9v9.2c0-5.08 5.91-9.2 13.2-9.2z"
-            fill="white"
-          />
-        </svg>
-        <div className="text-center max-w-screen-sm mb-10">
-          <h1 className="text-stone-200 font-bold text-2xl">
-            Next.js + Postgres Auth Starter
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 transition-all duration-200">
+      <div className="w-full max-w-2xl p-8 flex flex-col items-center">
+        {/* Circle avatar */}
+        <Image src={avatar} alt="Avatar" width={128} height={128} className="rounded-full mb-4 shadow-md shadow-black" />
+
+        {/* Welcome text content */}
+        <div className="space-y-4 text-center mb-12">
+          <h1 className="text-2xl md:text-3xl font-medium">
+            Bem vindo, <span className="font-bold">{titleCase(firstName + " " + lastName)}</span>
           </h1>
-          <p className="text-stone-400 mt-5">
-            This is a{' '}
-            <a
-              href="https://nextjs.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-stone-400 underline hover:text-stone-200 transition-all"
-            >
-              Next.js
-            </a>{' '}
-            starter kit that uses{' '}
-            <a
-              href="https://next-auth.js.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-stone-400 underline hover:text-stone-200 transition-all"
-            >
-              NextAuth.js
-            </a>{' '}
-            for simple email + password login and a{' '}
-            <a
-              href="https://vercel.com/postgres"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-stone-400 underline hover:text-stone-200 transition-all"
-            >
-              Postgres
-            </a>{' '}
-            database to persist the data.
-          </p>
+          <div className="space-y-2 text-lg md:text-xl">
+            <p>Busque os detentores de conhecimento</p>
+            <p>Eles são o caminho</p>
+            <p className="font-mono ">Sua trilha é {" "}
+              <span data-attribute="revealer" className="relative w-max font-mono
+              before:absolute before:inset-0 before:animate-typewriter
+              before:bg-white
+              after:absolute after:inset-0 after:w-[0.125em] after:ml-[0.25em] after:animate-caret
+              after:bg-black">
+                { route?.title || "#!@%#&!ˆ#&%$!*)!" }
+              </span>
+            </p>
+          </div>
         </div>
-        <div className="flex space-x-3">
-          <Link
-            href="/protected"
-            className="text-stone-400 underline hover:text-stone-200 transition-all"
-          >
-            Protected Page
-          </Link>
-          <p className="text-white">·</p>
-          <a
-            href="https://vercel.com/templates/next.js/prisma-postgres-auth-starter"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-stone-400 underline hover:text-stone-200 transition-all"
-          >
-            Deploy to Vercel
-          </a>
-        </div>
+
+        {/* Action button */}
+        {
+          success ?
+            <Link href={`/route`}>  
+            <Button variant="link" disabled={loading} className="hover:shadow-lg">Proxima dica...</Button></Link>
+            : <Button variant={error ? "destructive" : "default"} disabled={loading} className="hover:shadow-lg" onClick={handleClick}>
+            Descubra sua trilha
+          </Button>
+        }
       </div>
     </div>
-  );
+  )
 }

@@ -19,7 +19,7 @@ export function SignInWithCredential() {
     }
 
     if (session?.status === "authenticated") {
-      router.push("/dicas");
+      router.push("/");
     }
 
     if (session?.status === "unauthenticated") {

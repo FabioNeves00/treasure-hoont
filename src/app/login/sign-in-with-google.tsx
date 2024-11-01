@@ -25,7 +25,7 @@ export function SignInWithGoogle() {
     }
 
     if (session?.status === "authenticated") {
-      router.push("/clue");
+      router.push("/");
     }
 
     if (session?.status === "unauthenticated") {
