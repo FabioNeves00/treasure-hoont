@@ -17,6 +17,11 @@ export default function Page() {
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const session = useSession();
+  if (!session.data?.user) {
+    redirect("/login");
+  }
+
   useEffect(() => {
       getClue().then((data) => {
         setClue({
@@ -30,7 +35,7 @@ export default function Page() {
 
   const handleClick = async () => {
     setLoading((prev) => true);
-    const { newAnswer, err } = await answer(inputRef.current!.value, clue!.id);
+    const { newAnswer, err } = await answer(inputRef.current!.value.trim(), clue!.id);
     if (err) {
       setError((prev) => true);
       setLoading((prev) => false);
@@ -92,10 +97,7 @@ export default function Page() {
               disabled={loading}
               className="hover:shadow-lg flex w-fit justify-center flex-row"
             >
-              <Link href={`/route/${clue?.nextId}`}>
-                {success ? <Check className="h-4 w-4" /> : null}
                 Proxima dica...
-              </Link>
             </Button>
           )}
         </div>

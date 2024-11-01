@@ -2,23 +2,32 @@
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { redirect, useParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { toast } from "../../../components/ui/use-toast";
 import { getClueById } from "../../../use-cases/clue/get-clue-by-id";
 import { answer } from "../../../use-cases/user/answer";
 
 export default function Page() {
-  const [clue, setClue] = useState<{ hint: string; id: string, nextId: string } | null>(null);
+  const [clue, setClue] = useState<{
+    hint: string;
+    id: string;
+    nextId: string;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"error" | "success" | null>(null);
   const { id } = useParams();
+  const session = useSession();
+
+  // if (!session.data?.user) {
+  //   redirect("/login");
+  // }
 
   useEffect(() => {
     const loadClue = async () => {
       try {
-        const data = await getClueById(id as string); 
+        const data = await getClueById(id as string);
         setClue({ hint: data.hint!, id: data.id, nextId: data.nextId });
         setStatus("success");
       } catch {
@@ -42,7 +51,7 @@ export default function Page() {
 
   const handleClick = async () => {
     setLoading(true);
-    const { newAnswer, err } = await answer(inputRef.current!.value, clue!.id);
+    const { newAnswer, err } = await answer(inputRef.current!.value.trim(), clue!.id);
     setLoading(false);
 
     if (err) {
@@ -50,7 +59,8 @@ export default function Page() {
       toast({
         variant: "destructive",
         title: "Erro ao responder",
-        description: "Houve um erro ao responder. Tente novamente mais tarde ou encontre o responsável.",
+        description:
+          "Houve um erro ao responder. Tente novamente mais tarde ou encontre o responsável.",
       });
       return;
     }
@@ -58,7 +68,9 @@ export default function Page() {
     if (newAnswer) {
       setStatus("success");
       toast({
-        title: newAnswer.isRight ? "Resposta Correta!" : "Resposta incorreta :(",
+        title: newAnswer.isRight
+          ? "Resposta Correta!"
+          : "Resposta incorreta :(",
         description: newAnswer.isRight
           ? "Sua resposta foi correta. Procure a próxima dica com o professor!"
           : "Resposta incorreta, tente novamente!",
@@ -88,13 +100,24 @@ export default function Page() {
             className="mt-1 block max-w-lg appearance-none rounded-md border border-gray-300 px-5 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black sm:text-sm"
           />
           {status === "success" ? (
-            <Button variant="default" disabled={loading} onClick={handleClick} className="hover:shadow-lg">
+            <Button
+              variant="default"
+              disabled={loading}
+              onClick={handleClick}
+              className="hover:shadow-lg"
+            >
               {loading ? "Enviando..." : "Enviar"}
             </Button>
           ) : (
-            <Button variant="link" disabled={loading} onClick={loadTeacherHint} className="hover:shadow-lg flex w-fit">
+            <Button
+              variant="link"
+              disabled={loading}
+              onClick={loadTeacherHint}
+              className="hover:shadow-lg flex w-fit"
+            >
               {/*@ts-expect-error - null check later */}
-              {status === "success" ? <Check className="h-4 w-4" /> : null} Próxima dica...
+              {status === "success" ? <Check className="h-4 w-4" /> : null}{" "}
+              Próxima dica...
             </Button>
           )}
         </div>
