@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/server/db";
-import { answers } from "@/src/server/db/schema";
+import { answers, users } from "@/src/server/db/schema";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/src/server/auth";
+import { eq } from "drizzle-orm";
 
 export async function GET() {
   try {
