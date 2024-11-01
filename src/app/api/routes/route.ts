@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { title } = await request.json();
+    const { title, firstTeacherHint, firstTeacherAnswer } = await request.json();
 
     if (!title) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const [newRoute] = await db.insert(routes).values({ title }).returning();
+    const [newRoute] = await db.insert(routes).values({ title, firstTeacherHint, firstTeacherAnswer }).returning();
     return NextResponse.json(newRoute, { status: 201 });
   } catch (error) {
     console.error("Error creating route:", error);

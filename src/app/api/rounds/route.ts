@@ -50,6 +50,7 @@ export async function GET() {
       .from(rounds)
       .where(
         and(
+          // @ts-expect-error
           eq(rounds.routeId, user.routeId),
           eq(sql`${sequence} + 1`, rounds.sequence)
         )
@@ -69,21 +70,21 @@ export async function POST(request: NextRequest) {
   try {
     const {
       routeId,
-      clue,
-      nextTeacherClue,
-      clueAnswer,
-      nextTeacherAnswer,
+      hint,
+      hintAnswer,
       keySegment,
+      sequence,
+      finalHint,
     } = await request.json();
     const [newRound] = await db
       .insert(rounds)
       .values({
         routeId,
-        clue,
-        nextTeacherClue,
-        clueAnswer,
-        nextTeacherAnswer,
+        hint,
+        hintAnswer,
         keySegment,
+        sequence,
+        finalHint,
       })
       .returning();
     return NextResponse.json(newRound, { status: 201 });
