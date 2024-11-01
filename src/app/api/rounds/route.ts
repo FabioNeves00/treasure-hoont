@@ -36,27 +36,25 @@ export async function GET() {
         )
       );
 
-      if (!lastCorrectAnswer.rounds) {
-        return NextResponse.json(
-          { err: "Erro na busca" },
-          { status: 401 }
-        )
-      }
-      
-      const { sequence } = lastCorrectAnswer.rounds
-      if(!sequence) return NextResponse.json({ err: "Erro na busca" }, { status: 401 })
+    if (!lastCorrectAnswer.rounds) {
+      return NextResponse.json({ err: "Erro na busca" }, { status: 401 });
+    }
 
-      const [nextSequence] = await db
-        .select()
-        .from(rounds)
-        .where(
-          and(
-            eq(rounds.routeId, user.routeId),
-            eq(sql`${sequence} + 1`, rounds.sequence),
-          )
-        )
+    const { sequence } = lastCorrectAnswer.rounds;
+    if (!sequence)
+      return NextResponse.json({ err: "Erro na busca" }, { status: 401 });
 
-      const allRounds = await db.select().from(rounds);
+    const [nextSequence] = await db
+      .select()
+      .from(rounds)
+      .where(
+        and(
+          eq(rounds.routeId, user.routeId),
+          eq(sql`${sequence} + 1`, rounds.sequence)
+        )
+      );
+
+    const allRounds = await db.select().from(rounds);
     return NextResponse.json(allRounds);
   } catch (err) {
     return NextResponse.json(
