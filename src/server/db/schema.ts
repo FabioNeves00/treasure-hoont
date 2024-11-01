@@ -123,7 +123,7 @@ export const rounds = pgTable("rounds", {
   clueAnswer: varchar("clue_answer", { length: 255 }).notNull(),
   nextTeacherAnswer: varchar("next_teacher_answer", { length: 255 }).notNull(),
   keySegment: varchar("key_segment", { length: 255 }).notNull(),
-  sequence: serial("sequence"),
+  sequence: integer("sequence"),
 });
 
 export const roundsRelations = relations(rounds, ({ one, many }) => ({
