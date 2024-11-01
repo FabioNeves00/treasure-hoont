@@ -25,8 +25,7 @@ export async function GET(req: NextRequest) {
 
     //@ts-expect-error - null check later
     const roundsFromRoute = await db.select().from(rounds).where(eq(rounds.routeId, user.routeId));
-    console.log(roundsFromRoute)
-    return NextResponse.json(roundsFromRoute.filter(round => round.sequence === 0));
+    return NextResponse.json(roundsFromRoute[0]);
   } catch (err) {
     console.log(err);
     return NextResponse.json(
