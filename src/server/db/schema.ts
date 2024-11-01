@@ -4,44 +4,52 @@ import {
   date,
   index,
   integer,
-  pgEnum,
   pgTable,
   primaryKey,
+  serial,
   text,
   timestamp,
-  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
 import { Account } from "next-auth";
+import { createId } from "@paralleldrive/cuid2";
 
-const routes = ["asylum", "coven", "murder"] as const
-const routeEnum = pgEnum("routeEnum", routes)
+const DEFAULT_ID_LENGTH = 35;
 
 export const users = pgTable("user", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
+  id: varchar("id", { length: DEFAULT_ID_LENGTH })
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  routeId: varchar("route_id", { length: DEFAULT_ID_LENGTH }).notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   image: varchar("image", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),
-  route: routeEnum('route'),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
     precision: 3,
   }).default(sql`CURRENT_TIMESTAMP(3)`),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   accounts: many(accounts),
+  answers: many(answers, {
+    relationName: "answers",
+  }),
+  route: one(routes, {
+    fields: [users.routeId],
+    references: [routes.id],
+  }),
 }));
 
 export const accounts = pgTable(
   "account",
   {
-    userId: varchar("userId", { length: 255 }).notNull(),
-    type: varchar("type", { length: 255 })
-      .$type<Account["type"]>()
-      .notNull(),
+    userId: varchar("userId", { length: DEFAULT_ID_LENGTH }).notNull(),
+    type: varchar("type", { length: 255 }).$type<Account["type"]>().notNull(),
     provider: varchar("provider", { length: 255 }).notNull(),
-    providerAccountId: varchar("providerAccountId", { length: 255 }).notNull(),
+    providerAccountId: varchar("providerAccountId", {
+      length: DEFAULT_ID_LENGTH,
+    }).notNull(),
     refresh_token: text("refresh_token"),
     access_token: text("access_token"),
     expires_at: integer("expires_at"),
@@ -51,9 +59,11 @@ export const accounts = pgTable(
     session_state: varchar("session_state", { length: 255 }),
   },
   (account) => ({
-    compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
+    compoundKey: primaryKey({
+      columns: [account.provider, account.providerAccountId],
+    }),
     userIdIdx: index("acc_userId_idx").on(account.userId),
-  }),
+  })
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -66,12 +76,12 @@ export const sessions = pgTable(
     sessionToken: varchar("sessionToken", { length: 255 })
       .notNull()
       .primaryKey(),
-    userId: varchar("userId", { length: 255 }).notNull(),
+    userId: varchar("userId", { length: DEFAULT_ID_LENGTH }).notNull(),
     expires: timestamp("expires", { mode: "date" }).notNull(),
   },
   (session) => ({
     userIdIdx: index("sesh_userId_idx").on(session.userId),
-  }),
+  })
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -87,5 +97,67 @@ export const verificationTokens = pgTable(
   },
   (vt) => ({
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-  }),
+  })
 );
+
+export const routes = pgTable("routes", {
+  id: varchar("id", { length: DEFAULT_ID_LENGTH })
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+});
+
+export const routesRelations = relations(routes, ({ many }) => ({
+  rounds: many(rounds, {
+    relationName: "rounds",
+  }),
+}));
+
+export const rounds = pgTable("rounds", {
+  id: varchar("id", { length: DEFAULT_ID_LENGTH })
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  routeId: varchar("route_id", { length: DEFAULT_ID_LENGTH }).notNull(),
+  clue: varchar("clue", { length: 255 }).notNull(),
+  nextTeacherClue: varchar("next_teacher_clue", { length: 255 }).notNull(),
+  clueAnswer: varchar("clue_answer", { length: 255 }).notNull(),
+  nextTeacherAnswer: varchar("next_teacher_answer", { length: 255 }).notNull(),
+  keySegment: varchar("key_segment", { length: 255 }).notNull(),
+  sequence: serial("sequence"),
+});
+
+export const roundsRelations = relations(rounds, ({ one, many }) => ({
+  answers: many(answers, {
+    relationName: "answers",
+  }),
+  route: one(routes, {
+    fields: [rounds.routeId],
+    references: [routes.id],
+  }),
+}));
+
+export const answers = pgTable("answers", {
+  id: varchar("id", { length: DEFAULT_ID_LENGTH })
+    .$defaultFn(() => createId())
+    .primaryKey(),
+  answer: varchar("answer", { length: 255 }).notNull(),
+  isRight: boolean("is_right")
+    .default(sql`FALSE`)
+    .notNull(),
+  userId: varchar("user_id", { length: DEFAULT_ID_LENGTH }).notNull(),
+  roundId: varchar("round_id", { length: DEFAULT_ID_LENGTH }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const answersRelations = relations(answers, ({ one }) => ({
+  user: one(users, {
+    fields: [answers.userId],
+    references: [users.id],
+  }),
+  round: one(rounds, {
+    fields: [answers.roundId],
+    references: [rounds.id],
+  }),
+}));
