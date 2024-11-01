@@ -28,6 +28,7 @@ export const users = pgTable("user", {
     mode: "date",
     precision: 3,
   }).default(sql`CURRENT_TIMESTAMP(3)`),
+  sequence: integer("sequence"),
 });
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -105,8 +106,6 @@ export const routes = pgTable("routes", {
     .$defaultFn(() => createId())
     .primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
-  firstTeacherHint: varchar("first_teacher_hint", { length: 255 }).notNull(),
-  firstTeacherAnswer: varchar("first_teacher_answer", { length: 255 }).notNull(),
 });
 
 export const routesRelations = relations(routes, ({ many }) => ({

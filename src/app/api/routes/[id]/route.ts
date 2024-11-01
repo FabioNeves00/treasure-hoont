@@ -55,10 +55,10 @@ export async function PUT(
 ) {
   const { id } = params;
   try {
-    const { title, firstTeacherHint, firstTeacherAnswer } = await request.json();
+    const { title } = await request.json();
     const [updatedRoute] = await db
       .update(routes)
-      .set({ title, firstTeacherHint, firstTeacherAnswer })
+      .set({ title })
       .where(eq(routes.id, id))
       .returning();
     return NextResponse.json(updatedRoute);
