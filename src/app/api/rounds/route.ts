@@ -35,10 +35,10 @@ export async function GET() {
           eq(answers.userId, userId)
         )
       );
-      let sequence = 0
-      if (lastCorrectAnswer) {
-        sequence = lastCorrectAnswer.rounds!.sequence! + 1;
-      }
+    let sequence = 0
+    if (lastCorrectAnswer) {
+      sequence = lastCorrectAnswer.rounds!.sequence! + 1;
+    }
 
 
     const [nextSequence] = await db
@@ -52,9 +52,9 @@ export async function GET() {
         )
       );
 
-      if (!nextSequence) {
-        return NextResponse.json({ err: "Erro na busca" }, { status: 404 });
-      }
+    if (!nextSequence) {
+      return NextResponse.json({ err: "Erro na busca" }, { status: 404 });
+    }
 
     return NextResponse.json(nextSequence);
   } catch (err) {
@@ -70,21 +70,21 @@ export async function POST(request: NextRequest) {
   try {
     const {
       routeId,
-      clue,
-      nextTeacherClue,
-      clueAnswer,
-      nextTeacherAnswer,
+      hint,
+      hintAnswer,
       keySegment,
+      sequence,
+      finalHint,
     } = await request.json();
     const [newRound] = await db
       .insert(rounds)
       .values({
         routeId,
-        clue,
-        nextTeacherClue,
-        clueAnswer,
-        nextTeacherAnswer,
+        hint,
+        hintAnswer,
         keySegment,
+        sequence,
+        finalHint,
       })
       .returning();
     return NextResponse.json(newRound, { status: 201 });

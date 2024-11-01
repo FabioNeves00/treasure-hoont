@@ -105,6 +105,8 @@ export const routes = pgTable("routes", {
     .$defaultFn(() => createId())
     .primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
+  firstTeacherHint: varchar("first_teacher_hint", { length: 255 }).notNull(),
+  firstTeacherAnswer: varchar("first_teacher_answer", { length: 255 }).notNull(),
 });
 
 export const routesRelations = relations(routes, ({ many }) => ({
@@ -118,12 +120,11 @@ export const rounds = pgTable("rounds", {
     .$defaultFn(() => createId())
     .primaryKey(),
   routeId: varchar("route_id", { length: DEFAULT_ID_LENGTH }).notNull(),
-  clue: varchar("clue", { length: 255 }).notNull(),
-  nextTeacherClue: varchar("next_teacher_clue", { length: 255 }).notNull(),
-  clueAnswer: varchar("clue_answer", { length: 255 }).notNull(),
-  nextTeacherAnswer: varchar("next_teacher_answer", { length: 255 }).notNull(),
-  keySegment: varchar("key_segment", { length: 255 }).notNull(),
+  hint: varchar("hint", { length: 255 }),
+  hintAnswer: varchar("hint_answer", { length: 255 }),
+  keySegment: varchar("key_segment", { length: 255 }),
   sequence: integer("sequence"),
+  finalHint: varchar("final_hint", { length: 255}),
 });
 
 export const roundsRelations = relations(rounds, ({ one, many }) => ({
