@@ -29,8 +29,7 @@ export default function Page() {
       }
     });
   }, []);
-
-  if (!session.data?.user) {
+  if(!session.data?.user) {
     redirect("/login");
   };
 
@@ -92,7 +91,7 @@ export default function Page() {
           success ?
             <Link href={`/route`}>  
             <Button variant="link" disabled={loading} className="hover:shadow-lg">Proxima dica...</Button></Link>
-           : <Button variant={error ? "destructive" : "default"} disabled={loading} className="hover:shadow-lg" onClick={handleClick}>
+            : <Button variant={error ? "destructive" : "default"} disabled={loading} className="hover:shadow-lg" onClick={handleClick}>
             Descubra sua trilha
           </Button>
         }

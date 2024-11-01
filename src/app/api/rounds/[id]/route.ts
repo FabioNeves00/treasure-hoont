@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/server/db";
-import { rounds, users } from "@/src/server/db/schema";
-import { and, eq } from "drizzle-orm";
+import { answers, rounds, users } from "@/src/server/db/schema";
+import { and, eq, sql } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../../server/auth";
 
@@ -27,8 +27,19 @@ export async function GET(
   try {
     //@ts-expect-error - null check later
     const [round] = await db.select().from(rounds).where(and(eq(rounds.id, id), eq(rounds.routeId, foundUser.routeId)));
+    const [answer] = await db.select().from(answers).where(and(eq(answers.roundId, id), eq(answers.userId, foundUser.id), eq(answers.isRight, true)));
+    const [nextRound] = await db.select().from(rounds).where(and(eq(rounds.sequence, sql`${round.sequence!+1}`), eq(rounds.routeId, foundUser.routeId!)));
+    if (answer) {
+      return NextResponse.json({
+        err: "Resposta já feita",
+        status: 400
+      });
+    }
     if (round) {
-      return NextResponse.json(round);
+      return NextResponse.json({
+        ...round,
+        nextId: nextRound.id
+      });
     } else {
       return NextResponse.json(
         { err: "Etapa não encontrada" },

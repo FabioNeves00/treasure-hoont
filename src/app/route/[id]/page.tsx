@@ -2,14 +2,12 @@
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-import { redirect, useSearchParams } from "next/navigation";
-import { getUserRoute } from "../../use-cases/user/get-route";
-import { getClue } from "../../use-cases/clue/get-clue";
-import { getClueById } from "../../use-cases/clue/get-clue-by-id";
-import { answer } from "../../use-cases/user/answer";
-import { toast } from "../../components/ui/use-toast";
+import { redirect, useParams, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { toast } from "../../../components/ui/use-toast";
+import { getClueById } from "../../../use-cases/clue/get-clue-by-id";
+import { answer } from "../../../use-cases/user/answer";
 
 export default function Page() {
   const [clue, setClue] = useState<{ hint: string; id: string, nextId: string }>();
@@ -18,11 +16,11 @@ export default function Page() {
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const roundId = useSearchParams().get("roundId");
+  const { id } = useParams();
 
   useEffect(() => {
-    if (roundId) {
-      getClueById(roundId).then((data) => {
+    //@ts-expect-error - null check later
+      getClueById(id).then((data) => {
         setClue({
           hint: data.hint!,
           id: data.id,
@@ -31,18 +29,20 @@ export default function Page() {
         setLoading((prev) => false);
         setSuccess((prev) => true);
       });
-    } else {
-      getClue().then((data) => {
-        setClue({
-          hint: data.hint!,
-          id: data.id,
-          nextId: data.nextId
-        });
-        setLoading((prev) => false);
-        setSuccess((prev) => true);
-      });
-    }
   }, []);
+
+  const loadTeacherHint = async () => {
+    setLoading((prev) => true);
+    const { hint, id } = await getClueById(clue!.nextId);
+    setLoading((prev) => false);
+    setClue({
+      hint: hint!,
+      id,
+      nextId: ""
+    });
+    
+    setSuccess((prev) => false);
+  };
 
   const handleClick = async () => {
     setLoading((prev) => true);
@@ -67,6 +67,17 @@ export default function Page() {
       if (newAnswer.isRight) {
         setClue({ hint: "Procure o professor!", id: "1", nextId: "1" });
         setSuccess((prev) => true);
+        toast({
+          title: "Resposta Correta!!!!",
+          description:
+            "Sua resposta foi correta. Agora você pode procurar a proxima dica com o professor!",
+        });
+      } else {
+        toast({
+          title: "Resposta incorreta :(",
+          description:
+            "Sua resposta foi incorreta, tente novamente!",
+        });
       }
     }
   };
@@ -90,7 +101,7 @@ export default function Page() {
             required
             className="mt-1 block max-w-lg appearance-none rounded-md border border-gray-300 px-5 py-2 placeholder-gray-400 shadow-sm focus:border-black focus:outline-none focus:ring-black sm:text-sm"
           />
-          {!success ? (
+          {success ? (
             <Button
               variant={error ? "destructive" : "default"}
               disabled={loading}
@@ -106,12 +117,11 @@ export default function Page() {
             <Button
               variant="link"
               disabled={loading}
+              onClick={loadTeacherHint}
               className="hover:shadow-lg flex w-fit justify-center flex-row"
             >
-              <Link href={`/route/${clue?.nextId}`}>
                 {success ? <Check className="h-4 w-4" /> : null}
                 Proxima dica...
-              </Link>
             </Button>
           )}
         </div>
