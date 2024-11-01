@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { getUserRoute } from "../../use-cases/user/get-route";
 import { toast } from "../../components/ui/use-toast";
 import Link from "next/link";
+import { titleCase } from "../../lib/title-case";
 
 export default function Page() {
   const [route, setRoute] = useState<{title: string, id: string}>({ title: "!@!%$!#&%!!", id: " "});
@@ -69,7 +70,7 @@ export default function Page() {
         {/* Welcome text content */}
         <div className="space-y-4 text-center mb-12">
           <h1 className="text-2xl md:text-3xl font-medium">
-            Bem vindo, <span className="font-bold">{firstName + " " + lastName}</span>
+            Bem vindo, <span className="font-bold">{titleCase(firstName + " " + lastName)}</span>
           </h1>
           <div className="space-y-2 text-lg md:text-xl">
             <p>Busque os detentores de conhecimento</p>

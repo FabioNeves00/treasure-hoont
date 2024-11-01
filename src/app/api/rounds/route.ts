@@ -15,12 +15,11 @@ export async function GET() {
   const userId = session.user.id;
 
   try {
-    const [user] = await db.select().from(users).where(and(eq(users.id, userId), not(eq(users.routeId, sql`NULL`))));
-
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
     if (!user) {
       return NextResponse.json(
         { err: "Usuário não encontrado" },
-        { status: 401 }
+        { status: 404 }
       );
     }
 
@@ -36,29 +35,30 @@ export async function GET() {
           eq(answers.userId, userId)
         )
       );
-
-    if (!lastCorrectAnswer.rounds) {
-      return NextResponse.json({ err: "Erro na busca" }, { status: 401 });
+    let sequence = 0
+    if (lastCorrectAnswer) {
+      sequence = lastCorrectAnswer.rounds!.sequence! + 1;
     }
 
-    const { sequence } = lastCorrectAnswer.rounds;
-    if (!sequence)
-      return NextResponse.json({ err: "Erro na busca" }, { status: 401 });
 
     const [nextSequence] = await db
       .select()
       .from(rounds)
       .where(
         and(
-          // @ts-expect-error
+          //@ts-expect-error - null check later
           eq(rounds.routeId, user.routeId),
-          eq(sql`${sequence} + 1`, rounds.sequence)
+          eq(sql`${sequence}`, rounds.sequence)
         )
       );
 
-    const allRounds = await db.select().from(rounds);
-    return NextResponse.json(allRounds);
+    if (!nextSequence) {
+      return NextResponse.json({ err: "Erro na busca" }, { status: 404 });
+    }
+
+    return NextResponse.json(nextSequence);
   } catch (err) {
+    console.log(err);
     return NextResponse.json(
       { err: "Falha em buscar etapas" },
       { status: 500 }
