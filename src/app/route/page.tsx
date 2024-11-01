@@ -26,7 +26,6 @@ export default function Page() {
           nextId: data.nextId
         });
         setLoading((prev) => false);
-        setSuccess((prev) => true);
       });
   }, []);
 
