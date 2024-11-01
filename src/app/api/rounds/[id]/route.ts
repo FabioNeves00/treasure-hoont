@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/server/db";
-import { rounds } from "@/src/server/db/schema";
-import { eq } from "drizzle-orm";
+import { rounds, users } from "@/src/server/db/schema";
+import { and, eq } from "drizzle-orm";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../../server/auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const user = await getServerSession(authOptions);
+  if (!user || !user.user) {
+    return NextResponse.json({ err: "Falha na autenticação" }, { status: 401 });
+  }
+
+  const userId = user.user.id;
+  const [foundUser] = await db.select().from(users).where(eq(users.id, userId));
+  if (!foundUser) {
+    return NextResponse.json(
+      { err: "Usuário não encontrado" },
+      { status: 404 }
+    );
+  }
+
   const { id } = params;
   try {
-    const [round] = await db.select().from(rounds).where(eq(rounds.id, id));
+    //@ts-expect-error - null check later
+    const [round] = await db.select().from(rounds).where(and(eq(rounds.id, id), eq(rounds.routeId, foundUser.routeId)));
     if (round) {
       return NextResponse.json(round);
     } else {

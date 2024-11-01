@@ -2,20 +2,22 @@
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { getUserRoute } from "../../use-cases/user/get-route";
 import { titleCase } from "../../lib/title-case";
 import { getClue } from "../../use-cases/clue/get-clue";
+import { getClueById } from "../../use-cases/clue/get-clue-by-id";
 
 export default function Page() {
   const [route, setRoute] = useState<{title: string, id: string}>({ title: "!@!%$!#&%!!", id: " "});
-  const [isTeacherClue, setIsTeacherClue] = useState<boolean>(false);
   const [clue, setClue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
   const session = useSession();
+
+  const roundId = useSearchParams().get('roundId')
 
   useEffect(() => {
     getUserRoute().then(data => {
@@ -28,17 +30,19 @@ export default function Page() {
         setSuccess(prev => true);
       }
     });
-
-    // getClue().then(data => {
-    //   if (data.error) {
-    //     setError(prev => true);
-    //     setLoading(prev => false)
-    //   } else if (data.id) {
-    //     setClue(data);
-    //     setLoading(prev => false)
-    //     setSuccess(prev => true);
-    //   }
-    // });
+    if(roundId) {
+      getClueById(roundId).then(data => {
+          setClue(data.hint!);
+          setLoading(prev => false)
+          setSuccess(prev => true);
+      });
+    } else {
+      getClue().then(data => {
+          setClue(data.hint!);
+          setLoading(prev => false)
+          setSuccess(prev => true);
+      })
+    }
   }, [])
 
   if (!session.data?.user) {
@@ -63,7 +67,7 @@ export default function Page() {
             Bem vindo, <span className="font-bold">{titleCase(firstName + " " + lastName)} de {route.title}</span>
           </h1>
           <div className="space-y-2 text-lg md:text-xl">
-            <p>{}</p>
+            <p>{clue}</p>
             
           </div>
         </div>

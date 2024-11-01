@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/server/auth";
 import { and, eq, not, sql } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
@@ -23,40 +23,10 @@ export async function GET() {
       );
     }
 
-    const [lastCorrectAnswer] = await db
-      .select()
-      .from(answers)
-      .leftJoin(rounds, eq(answers.roundId, rounds.id))
-      .where(
-        and(
-          //@ts-expect-error - null check later
-          eq(rounds.routeId, user.routeId),
-          eq(answers.isRight, true),
-          eq(answers.userId, userId)
-        )
-      );
-    let sequence = 0
-    if (lastCorrectAnswer) {
-      sequence = lastCorrectAnswer.rounds!.sequence! + 1;
-    }
-
-
-    const [nextSequence] = await db
-      .select()
-      .from(rounds)
-      .where(
-        and(
-          //@ts-expect-error - null check later
-          eq(rounds.routeId, user.routeId),
-          eq(sql`${sequence}`, rounds.sequence)
-        )
-      );
-
-    if (!nextSequence) {
-      return NextResponse.json({ err: "Erro na busca" }, { status: 404 });
-    }
-
-    return NextResponse.json(nextSequence);
+    //@ts-expect-error - null check later
+    const roundsFromRoute = await db.select().from(rounds).where(eq(rounds.routeId, user.routeId));
+    console.log(roundsFromRoute)
+    return NextResponse.json(roundsFromRoute.filter(round => round.sequence === 0));
   } catch (err) {
     console.log(err);
     return NextResponse.json(
