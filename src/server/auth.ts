@@ -30,10 +30,7 @@ export const authOptions: NextAuthOptions = {
         if (!emailDomain) {
           return false
         }
-
-        return (
-          ['@cesupa.br', '@aluno.cesupa.br', '@prof.cesupa.br'].includes(emailDomain[0])
-        )
+        return true
       }
 
       return false

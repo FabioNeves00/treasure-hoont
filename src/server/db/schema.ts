@@ -14,13 +14,13 @@ import {
 import { Account } from "next-auth";
 import { createId } from "@paralleldrive/cuid2";
 
-const DEFAULT_ID_LENGTH = 35;
+const DEFAULT_ID_LENGTH = 50;
 
 export const users = pgTable("user", {
   id: varchar("id", { length: DEFAULT_ID_LENGTH })
     .$defaultFn(() => createId())
     .primaryKey(),
-  routeId: varchar("route_id", { length: DEFAULT_ID_LENGTH }).notNull(),
+  routeId: varchar("route_id", { length: DEFAULT_ID_LENGTH }),
   name: varchar("name", { length: 255 }).notNull(),
   image: varchar("image", { length: 255 }),
   email: varchar("email", { length: 255 }).notNull(),

@@ -1,19 +1,14 @@
 import { api } from "../../lib/api";
 
-export const assignRoute = async () => {
-  const response = await api(`/assign-route`, {
-    method: "POST",
-  });
+export const getUserRoute = async () => {
+  const response = await api(`/users/get-route`);
   return response.data as RouteResponse;
 };
 
 type RouteResponse =
   | ({
-      message: "Rota atribuída com sucesso";
-      route: {
         id: string;
         title: string;
-      };
     } & {
       error?: never;
       status?: never;
@@ -22,6 +17,6 @@ type RouteResponse =
       error: string;
       status: number;
     } & {
-      message?: never;
-      route?: never;
+      id?: never;
+        title?: never;
     });

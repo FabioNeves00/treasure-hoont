@@ -2,29 +2,61 @@
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { api } from "../../lib/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { assignRoute } from "../../use-cases/user/assign-route";
+import { redirect } from "next/navigation";
+import { getUserRoute } from "../../use-cases/user/get-route";
+import { toast } from "../../components/ui/use-toast";
+import Link from "next/link";
 
 export default function Page() {
-  const [route, setRoute] = useState<{title: string}>({ title: "!@!%$!#&%!!" });
+  const [route, setRoute] = useState<{title: string, id: string}>({ title: "!@!%$!#&%!!", id: " "});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [success, setSuccess] = useState(false);
   const session = useSession();
-  if (!session.data?.user) return <div>Carregando...</div>;
-  const avatar = session.data.user.image!;
-  const splittedName = session.data.user.name!.split(" ");
+
+  useEffect(() => {
+    getUserRoute().then(data => {
+      if (data.error) {
+        setError(prev => true);
+        setLoading(prev => false)
+      } else if (data.id) {
+        setRoute(data);
+        setLoading(prev => false)
+        setSuccess(prev => true);
+      }
+    });
+  }, []);
+
+  if (!session.data?.user) {
+    redirect("/login");
+  };
+
+  const avatar = session.data!.user.image!;
+  const splittedName = session.data!.user.name!.split(" ");
   const [firstName, lastName] = [splittedName[0], splittedName.at(-1)];
-  //on click reverse animation from span and change content
+
   const handleClick = async () => {
     setLoading(prev => true)
-    const response = await assignRoute();
-    if (response.error) {
+    const { error, message, route } = await assignRoute();
+
+    if (error) {
       setError(prev => true);
       setLoading(prev => false)
-    } else if (response.message){
-      setRoute(response.route);
+      toast({
+        variant: "destructive",
+        title: "Erro ao atribuir sua trilha",
+        description: "Houve um erro ao atribuir sua trilha. Por favor, tente novamente mais tarde ou encontre o responsável local.",
+      });
+    } else if (message){
+      setRoute(route);
       setLoading(prev => false)
+      toast({
+        title: "Trilha atribuída com sucesso",
+        description: "Sua trilha foi atribuída com sucesso. Agora você pode começar a jogar!",
+      });
+      setSuccess(prev => true);
     }
   };
 
@@ -48,16 +80,21 @@ export default function Page() {
               before:bg-white
               after:absolute after:inset-0 after:w-[0.125em] after:ml-[0.25em] after:animate-caret
               after:bg-black">
-                { route.title }
+                { route?.title || "#!@%#&!ˆ#&%$!*)!" }
               </span>
             </p>
           </div>
         </div>
 
         {/* Action button */}
-        <Button variant={error ? "destructive" : "default"} disabled={error || loading} className="hover:shadow-lg" onClick={handleClick}>
-          Descubra sua trilha
-        </Button>
+        {
+          success ?
+            <Link href={`/route`}>  
+            <Button variant="link" disabled={loading} className="hover:shadow-lg">Proxima dica...</Button></Link>
+           : <Button variant={error ? "destructive" : "default"} disabled={loading} className="hover:shadow-lg" onClick={handleClick}>
+            Descubra sua trilha
+          </Button>
+        }
       </div>
     </div>
   )

@@ -25,7 +25,7 @@ export function SignInWithGoogle() {
     }
 
     if (session?.status === "authenticated") {
-      router.push("/dicas");
+      router.push("/clue");
     }
 
     if (session?.status === "unauthenticated") {
