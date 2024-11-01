@@ -26,15 +26,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-  const headersList = headers();
-  // read the custom x-url header
-  const header_url = headersList.get('x-url') || "";
-  console.log(header_url);
-  // if (!session && !header_url.includes("login") && !header_url.includes("register")) {
-  //   redirect("/login");
-  // }
-
   return (
     <html lang="pt-br" className="antialiased" suppressHydrationWarning>
       <body className={`${inter.className} bg-[#f0ebf8]`}>
