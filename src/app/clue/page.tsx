@@ -2,21 +2,30 @@
 import { Button } from "@/src/components/ui/button";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import { api } from "../../lib/api";
+import { useState } from "react";
+import { assignRoute } from "../../use-cases/user/assign-route";
 
 export default function Page() {
+  const [route, setRoute] = useState<{title: string}>({ title: "!@!%$!#&%!!" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const session = useSession();
   if (!session.data?.user) return <div>Carregando...</div>;
   const avatar = session.data.user.image!;
   const splittedName = session.data.user.name!.split(" ");
   const [firstName, lastName] = [splittedName[0], splittedName.at(-1)];
   //on click reverse animation from span and change content
-  const handleClick = () => {
-    const span = document.querySelector("span[data-attribute='revealer']")!;
-    span.classList.add("reverse-typewriter");
-    span.innerHTML = "jesus";
-    setTimeout(() => {
-      span.classList.remove("reverse-typewriter");
-    }, 2000);
+  const handleClick = async () => {
+    setLoading(prev => true)
+    const response = await assignRoute();
+    if (response.error) {
+      setError(prev => true);
+      setLoading(prev => false)
+    } else if (response.message){
+      setRoute(response.route);
+      setLoading(prev => false)
+    }
   };
 
   return (
@@ -35,16 +44,18 @@ export default function Page() {
             <p>Eles são o caminho</p>
             <p className="font-mono ">Sua trilha é {" "}
               <span data-attribute="revealer" className="relative w-max font-mono
-            before:absolute before:inset-0 before:animate-typewriter
-            before:bg-white
-            after:absolute after:inset-0 after:w-[0.125em] after:ml-[0.25em] after:animate-caret
-            after:bg-black">!@#%!*@ˆ#(!@!(#$))@#@</span>
+              before:absolute before:inset-0 before:animate-typewriter
+              before:bg-white
+              after:absolute after:inset-0 after:w-[0.125em] after:ml-[0.25em] after:animate-caret
+              after:bg-black">
+                { route.title }
+              </span>
             </p>
           </div>
         </div>
 
         {/* Action button */}
-        <Button className="hover:shadow-lg" onClick={handleClick}>
+        <Button variant={error ? "destructive" : "default"} disabled={error || loading} className="hover:shadow-lg" onClick={handleClick}>
           Descubra sua trilha
         </Button>
       </div>

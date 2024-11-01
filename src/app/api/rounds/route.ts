@@ -3,7 +3,7 @@ import { db } from "@/src/server/db";
 import { answers, rounds, users } from "@/src/server/db/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/server/auth";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -43,7 +43,8 @@ export async function GET() {
         )
       }
       
-      const {sequence} = lastCorrectAnswer.rounds
+      const { sequence } = lastCorrectAnswer.rounds
+      if(!sequence) return NextResponse.json({ err: "Erro na busca" }, { status: 401 })
 
       const [nextSequence] = await db
         .select()
@@ -51,7 +52,7 @@ export async function GET() {
         .where(
           and(
             eq(rounds.routeId, user.routeId),
-            eq(sequence + 1, rounds.sequence),
+            eq(sql`${sequence} + 1`, rounds.sequence),
           )
         )
 
